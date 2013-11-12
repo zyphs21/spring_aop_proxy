@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans.xsd">
+           
+	<bean id="helloword" class="org.hanson.model.Helloword" scope="prototype"></bean>
+	
+	<!--创建了一个User对象，如果要注入值不使用ref，用value  -->
+	<bean id="user" class="org.hanson.model.User">
+		<property name="id" value="2"></property>
+		<property name="username" value="hanson"></property>
+	</bean>
+	
+	<bean id="userDao" class="org.hanson.DAO.UserDAO"></bean>
+	
+	<!-- autowrite=byName表示根据name来完成注入，
+		byType表示根据类型注入，使用byType注入如果一个类中有两个同类型的对象，就会抛出异常，
+		所以一般在开发中用byName，虽然自动注入可以减少配置，但是bean文件无法很好了解整个类的结果，所以不建议使用autowrite-->
+	<bean id="userService" class="org.hanson.service.UserService" autowire="byName">
+		<!-- name中的值会在 userService对象中调用setxx方法来注入，如name="userDAO"
+			在具体注入时会调用setUserDAO(IUserDao userDAO)来完成注入,name的值要和setXX的XX一致
+			ref="userDao"表示配置文件中的bean中所创建DAO的id-->
+		<!--<property name="userDAO" ref="userDao"></property>  -->
+	</bean>
+	  
+	<!-- 对于userAction而言，里面属性的值的状态 会根据不同的线程得到不同的值，所以应该是用多例--> 
+	<bean id="userAction" class="org.hanson.action.UserAction">
+		<property name="userService" ref="userService"></property>
+		<property name="user" ref="user"></property>
+		<property name="id" value="2"></property>
+		
+		<property name="names">
+			<list>
+				<value>aaa</value>
+				<value>bbb</value>
+				<value>ccc</value>
+			</list>
+		</property>
+	</bean>
+	 
+	 <!-- 以下是使用构造函数注入，不常用 -->
+	 <!-- 
+	 <bean id="userAction" class="org.hanson.action.UserAction">
+	 	<constructor-arg ref="userService"></constructor-arg>
+	 </bean> -->
+	 
+	 <!-- -------------------动态代理-------------------------------------- -->
+	 
+	 <!-- 静态注入，因为LoggerProxy类不用setter方法 -->
+	 <bean id="userDynamicDao" class="org.hanson.proxy.LoggerProxy" factory-method="getInstance">
+	 <!-- 这个userDAO会找代码中用annotation的dao(注意这里还没有换annotation的dtd，仅供参考) 
+	                  所以在LoggerProxy中的getInstance方法所传入的参数就是下面这个userDao，即是要代理的对象
+	                  则在userService中需要注入的就应该是该id的userDynamicDao-->
+	 	<constructor-arg ref="userDao">
+	 	</constructor-arg>
+	 </bean>
+	 
+</beans>
